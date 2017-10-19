@@ -1,0 +1,28 @@
+{
+	"variants":
+	{
+		"facing=north":
+		{
+			"model": "tinyreactors:reactor_energy_port",
+			"y": 0
+		},
+		
+		"facing=south":
+		{
+			"model": "tinyreactors:reactor_energy_port",
+			"y": 180
+		},
+		
+		"facing=west":
+		{
+			"model": "tinyreactors:reactor_energy_port",
+			"y": 270
+		},
+		
+		"facing=east":
+		{
+			"model": "tinyreactors:reactor_energy_port",
+			"y": 90
+		}
+	}
+}
