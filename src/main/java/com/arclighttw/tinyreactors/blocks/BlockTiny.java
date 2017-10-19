@@ -33,7 +33,7 @@ public class BlockTiny extends Block
 		super(material);
 		setCreativeTab(TinyReactors.TAB);
 		
-		setHardness(50F);
+		setHardness(25F);
 		setResistance(2000F);
 		
 		setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
@@ -44,7 +44,7 @@ public class BlockTiny extends Block
 	{
 		if(player.isSneaking() && !world.isRemote)
 		{
-			ItemStack item = player.getHeldItem(hand);
+			ItemStack item = player.getHeldItem(EnumHand.MAIN_HAND);
 			
 			if(item.getItem() instanceof ItemPickaxe)
 			{
