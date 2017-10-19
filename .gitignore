@@ -21,3 +21,7 @@ build
 eclipse
 run
 .DS_Store
+gradlew
+gradlew.bat
+gradle/wrapper/gradle-wrapper.jar
+gradle/wrapper/gradle-wrapper.properties
