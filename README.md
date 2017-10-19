@@ -41,6 +41,8 @@ __Front-End:__
 * The config file now supports adding/removing ANY block from the Reactant registry.
 * The Reactor Controller must be activated (clicked) to validate a Reactor structure.
 * The Reactor Controller has a UI that displays key information, such as Efficiency and Output.
+* Removed Capacitors.
+* _^ This is due to be reimplemented but in a better way._
 
 __Back-End:__
 * Reactor Controllers no longer check validity once a second.
