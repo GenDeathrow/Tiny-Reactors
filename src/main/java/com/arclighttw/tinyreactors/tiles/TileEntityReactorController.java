@@ -1,7 +1,9 @@
 package com.arclighttw.tinyreactors.tiles;
 
 import com.arclighttw.tinyreactors.init.TRBlocks;
+import com.arclighttw.tinyreactors.main.TinyReactors;
 import com.arclighttw.tinyreactors.managers.ReactorManager;
+import com.arclighttw.tinyreactors.network.MessageReactorStateClient;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
@@ -10,15 +12,14 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class TileEntityReactorController extends TileEntity implements ITickable
+public class TileEntityReactorController extends TileEntity
 {
-	boolean isValid, loaded = true;
+	boolean isValid, isActive;
 	
 	int xStart, yStart, zStart;
 	int xEnd, yEnd, zEnd;
@@ -26,56 +27,9 @@ public class TileEntityReactorController extends TileEntity implements ITickable
 	int availableYield, maximumYield;
 	
 	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound compound)
-	{
-		super.writeToNBT(compound);
-		
-		NBTTagCompound controllerTag = new NBTTagCompound();
-		controllerTag.setInteger("xStart", xStart);
-		controllerTag.setInteger("yStart", yStart);
-		controllerTag.setInteger("zStart", zStart);
-		
-		controllerTag.setInteger("xEnd", xEnd);
-		controllerTag.setInteger("yEnd", yEnd);
-		controllerTag.setInteger("zEnd", zEnd);
-		
-		controllerTag.setInteger("availableYield", availableYield);
-		controllerTag.setInteger("maximumYield", maximumYield);
-		
-		controllerTag.setBoolean("isValid", isValid);
-		
-		compound.setTag("Controller", controllerTag);
-
-		return compound;
-	}
-	
-	@Override
-	public void readFromNBT(NBTTagCompound compound)
-	{
-		super.readFromNBT(compound);
-		
-		NBTTagCompound controllerTag = compound.getCompoundTag("Controller");
-		xStart = controllerTag.getInteger("xStart");
-		yStart = controllerTag.getInteger("yStart");
-		zStart = controllerTag.getInteger("zStart");
-		
-		xEnd = controllerTag.getInteger("xEnd");
-		yEnd = controllerTag.getInteger("yEnd");
-		zEnd = controllerTag.getInteger("zEnd");
-		
-		availableYield = controllerTag.getInteger("availableYield");
-		maximumYield = controllerTag.getInteger("maximumYield");
-		
-		setState(controllerTag.getBoolean("isValid"));
-		
-		if(isValid)
-			loaded = false;
-	}
-	
-	@Override
 	public SPacketUpdateTileEntity getUpdatePacket()
 	{
-		return new SPacketUpdateTileEntity(pos, 3, getUpdateTag());
+		return new SPacketUpdateTileEntity(getPos(), 3, getUpdateTag());
 	}
 	
 	@Override
@@ -83,7 +37,7 @@ public class TileEntityReactorController extends TileEntity implements ITickable
 	{
 		return writeToNBT(new NBTTagCompound());
 	}
-
+	
 	@Override
 	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt)
 	{
@@ -92,24 +46,79 @@ public class TileEntityReactorController extends TileEntity implements ITickable
 	}
 	
 	@Override
-	public void update()
+	public NBTTagCompound writeToNBT(NBTTagCompound compound)
 	{
-		if(world == null)
-			return;
+		super.writeToNBT(compound);
 		
-		if(loaded)
-			return;
+		compound.setBoolean("isValid", isValid);
+		compound.setBoolean("isActive", isActive);
 		
-		checkValidity();
-		loaded = true;
+		compound.setInteger("xStart", xStart);
+		compound.setInteger("yStart", yStart);
+		compound.setInteger("zStart", zStart);
+		
+		compound.setInteger("xEnd", xEnd);
+		compound.setInteger("yEnd", yEnd);
+		compound.setInteger("zEnd", zEnd);
+		
+		compound.setInteger("availableYield", availableYield);
+		compound.setInteger("maximumYield", maximumYield);
+		
+		return compound;
 	}
 	
-	public void checkValidity(boolean returnIfValid)
+	@Override
+	public void readFromNBT(NBTTagCompound compound)
+	{
+		super.readFromNBT(compound);
+		
+		isValid = compound.getBoolean("isValid");
+		isActive = compound.getBoolean("isActive");
+		
+		xStart = compound.getInteger("xStart");
+		yStart = compound.getInteger("yStart");
+		zStart = compound.getInteger("zStart");
+		
+		xEnd = compound.getInteger("xEnd");
+		yEnd = compound.getInteger("yEnd");
+		zEnd = compound.getInteger("zEnd");
+		
+		availableYield = compound.getInteger("availableYield");
+		maximumYield = compound.getInteger("maximumYield");
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public int getReactorEfficiencyScaled(int scale)
+	{
+		return isActive ? (int)(scale * ((float)availableYield / (float)maximumYield)) : 0;
+	}
+	
+	public boolean isStructureValid()
+	{
+		return isValid;
+	}
+	
+	public boolean isActive()
+	{
+		return isValid && isActive;
+	}
+	
+	public int getReactorTotalYield()
+	{
+		return isActive ? availableYield : 0;
+	}
+	
+	public int[] getReactorBounds()
+	{
+		if(isValid)
+			return new int[] { xEnd - xStart + 1, yStart - yEnd + 1, zEnd - zStart + 1 };
+		
+		return new int[] { -1, -1, -1 };
+	}
+	
+	public void checkStructure()
 	{
 		if(!(world instanceof WorldServer))
-			return;
-		
-		if(returnIfValid && isValid)
 			return;
 		
 		((WorldServer)world).addScheduledTask(() -> {
@@ -142,7 +151,7 @@ public class TileEntityReactorController extends TileEntity implements ITickable
 			
 			if(yStart - yEnd < 2)
 			{
-				setState(false);
+				setValid(false);
 				return;
 			}
 			
@@ -165,7 +174,7 @@ public class TileEntityReactorController extends TileEntity implements ITickable
 			
 			if(f == null)
 			{
-				setState(false);
+				setValid(false);
 				return;
 			}
 			
@@ -219,7 +228,7 @@ public class TileEntityReactorController extends TileEntity implements ITickable
 			
 			if(!dirChanged)
 			{
-				setState(false);
+				setValid(false);
 				return;
 			}
 			
@@ -248,6 +257,9 @@ public class TileEntityReactorController extends TileEntity implements ITickable
 			boolean hasOutput = false;
 			int outputCount = 0;
 			
+			availableYield = 0;
+			maximumYield = 0;
+			
 			for(int x = xStart; x <= xEnd; x++)
 			{
 				for(int z = zStart; z <= zEnd; z++)
@@ -266,11 +278,16 @@ public class TileEntityReactorController extends TileEntity implements ITickable
 							outputCount++;
 						}
 						
+						TileEntity tile = world.getTileEntity(pos);
+						
+						if(tile instanceof IReactorComponent)
+							((IReactorComponent)tile).setController(this);
+						
 						if(y == yStart || y == yEnd || (x == xStart && z == zStart) || (x == xEnd && z == zEnd) || (x == xStart && z == zEnd) || (x == xEnd && z == zStart))
 						{
 							if(b == Blocks.AIR || !ReactorManager.isValidStructure(b))
 							{
-								setState(false);
+								setValid(false);
 								return;
 							}
 						}
@@ -278,7 +295,7 @@ public class TileEntityReactorController extends TileEntity implements ITickable
 						{
 							if(b == Blocks.AIR || !ReactorManager.isValidCasing(b))
 							{
-								setState(false);
+								setValid(false);
 								return;
 							}
 						}
@@ -291,7 +308,7 @@ public class TileEntityReactorController extends TileEntity implements ITickable
 							
 							if(!ReactorManager.isReactant(b))
 							{
-								setState(false);
+								setValid(false);
 								return;
 							}
 							
@@ -308,94 +325,49 @@ public class TileEntityReactorController extends TileEntity implements ITickable
 				maximumYield = 0;
 			}
 			
-			setState(isReactor);
+			setValid(isReactor);
 		});
 	}
 	
-	public boolean isValid()
+	public void setValid(boolean valid)
 	{
-		return isValid;
-	}
-	
-	@SideOnly(Side.CLIENT)
-	public String getReactorScale(String bound)
-	{
-		if(bound == "x")
-			return "    X: " + (xEnd - xStart + 1);
-		
-		if(bound == "y")
-			return "    Y: " + (yStart - yEnd + 1);
-		
-		if(bound == "z")
-			return "    Z: " + (zEnd - zStart + 1);
-		
-		return "";
-	}
-	
-	@SideOnly(Side.CLIENT)
-	public int getReactorOutput()
-	{
-		return availableYield;
-	}
-	
-	@SideOnly(Side.CLIENT)
-	public int getReactorEfficiencyScaled(int scale)
-	{
-		if(!isValid)
-			return 0;
-		
-		return (int)(scale * ((float)availableYield / (float)maximumYield));
-	}
-	
-	void checkValidity()
-	{
-		checkValidity(false);
-	}
-	
-	void setState(boolean state)
-	{
-		boolean oldState = isValid;
-		isValid = state;
+		isValid = valid;
 		
 		if(!isValid)
-			availableYield = maximumYield = 0;
-		
-		if(world == null)
-			return;
-		
-		if(world instanceof WorldServer && !isValid)
-			ReactorManager.onControllerInvalidated((WorldServer)world, getPos());
-		
-		if(oldState != isValid || !loaded)
 		{
-			for(int x = xStart; x <= xEnd; x++)
+			setActive(false);
+			return;
+		}
+		
+		syncEnergyPorts();
+		syncServerToClient();
+	}
+	
+	public void setActive(boolean active)
+	{
+		isActive = active;
+		syncEnergyPorts();
+		syncServerToClient();
+	}
+	
+	void syncEnergyPorts()
+	{
+		BlockPos pos = null;
+		
+		for(int x = xStart; x <= xEnd; x++)
+		{
+			for(int z = zStart; z <= zEnd; z++)
 			{
-				for(int z = zStart; z <= zEnd; z++)
+				for(int y = yStart; y >= yEnd; y--)
 				{
-					for(int y = yStart; y >= yEnd; y--)
-					{
-						TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));
-						
-						if(tile == null)
-							continue;
-						
-						if(tile instanceof IReactorComponent)
-						{
-							IReactorComponent component = (IReactorComponent)tile;
-							
-							if(component.getController() != null && !component.getController().getPos().equals(getPos()))
-								continue;
-
-							component.setController(isValid ? this : null);
-						}
-						
-						if(tile instanceof TileEntityReactorEnergyPort)
-							((TileEntityReactorEnergyPort)tile).setOutput(availableYield);
-					}
+					pos = new BlockPos(x, y, z);
+					
+					TileEntity tile = world.getTileEntity(pos);
+					
+					if(tile != null && tile instanceof TileEntityReactorEnergyPort)
+						((TileEntityReactorEnergyPort)tile).setOutput(isActive ? availableYield : 0);
 				}
 			}
-			
-			syncServerToClient();
 		}
 	}
 	
@@ -405,5 +377,7 @@ public class TileEntityReactorController extends TileEntity implements ITickable
 		world.notifyBlockUpdate(pos, world.getBlockState(pos), world.getBlockState(pos), 3);
 		world.scheduleBlockUpdate(pos, getBlockType(), 0, 0);
 		markDirty();
+		
+		TinyReactors.NETWORK.sendToAll(new MessageReactorStateClient());
 	}
 }
