@@ -13,14 +13,11 @@ Build a tiny reactor... Or a massive one!
 _Nothing here is a good sign ( it means there are no bug checks/fixes required at this time )._
 * RF, Tesla, IC2 support ( Hatchery )
 * Reimplement Capacitors ( with connected stats ).
-
-* Check shift click now works in container
-* Check Energy Port only output when reactor is active.
-* Remove ReactorManager tracking of players
+* Destroying Controller <- should boot out players currently using it.
 
 ## About
 
-Tiny Reactors is all about bringing power generation to Minecraft through the construction of fully scalable, easily expandable multiblock Reactor structures.  Place your favourite Vanilla ore (or block variant) inside the Reactor structure to generate a limited amount of RF/tick infinitely.
+Tiny Reactors is all about bringing power generation to Minecraft through the construction of fully scalable, easily expandable multiblock Reactor structures.  Place your favourite Vanilla ore ( or block variant ) inside the Reactor structure to generate a limited amount of RF/tick infinitely.
 
 All Reactants are fully configurable at runtime using the Mod Options.  The minimum reactor size is a 3 x 3 x 3 structure, providing 1 Reactant slot; there is no configured maximum reactor size, so expand to your needs!
 
@@ -32,19 +29,26 @@ A Tiny Reactor is built primarily out of Reactor Casing blocks.  The bottom and 
 
 To power your Tiny Reactor, place your favourite ores within the Reactor structure; with default settings applied, rarer ores produce more power ( e.g. Coal ore produces 1 RF/tick, whereas Emerald Ore produces 32 RF/tick ).  Crafting these ores into their associated blocks produces significantly more power in a smaller space ( e.g. a Coal Block produces 8 RF/tick, versus the 1 RF/tick for a Coal Ore block ). 
 
-You can modify the rates of all the default ores or even remove them entirely, as well as add your own blocks and other mod's blocks too ( e.g. minecraft:glowstone:16 or tp:netherstar_block:1024 ).  These settings can even be modified at runtime to allow for full modpack building support, using the in game Mod Options.
+You can modify the rates of all the default ores or even remove them entirely, as well as adding block's from any other mod ( e.g. minecraft:glowstone:32 or tp:netherstar_block:1024 ).  These settings can even be modified at runtime to allow for full modpack building support, using the in game Mod Options.
+
 
 ## Roadmap
 
-Version 0.3.1 is set to make the following changes;
+### Indefinite
+
+* Config option for Reactant decay ( for those wanting a system to maintain ).
+* _^ Reactor Waste Port to accumulate product decay._
+* Capacitors connect and split energy.
+
+### Version 0.3.1 is set to make the following changes;
 
 __Front-End:__
-* The Reactor Controller is now controlled from a UI.
+* The Reactor Controller is now controlled from a UI and can be enabled/disabled at will ( if part of a valid structure ).
 
 __Back-End:__
-* _None_
+* The Reactor Controller now has a _valid_ and _active_ flag to allow valid structures to be disabled.
 
-Version 0.3.0 changed a number of features with Tiny Reactors;
+### Version 0.3.0 changed a number of features with Tiny Reactors;
 
 __WARNING: Due to the changes implemented in Tiny Reactors 0.3.0, it is no longer compatible with earlier versions.__
 __Loading a world containing pre-0.3.0 Reactor components will invalidate the existing blocks; I recommend either removing all Reactors and associated blocks ( Casing, Glass, etc. ) prior to installing the new version or removing all Tiny Reactor blocks post-update and replacing them in the world.__
@@ -62,8 +66,3 @@ __Back-End:__
 * Reactor Controllers no longer check validity once a second.
 * _^ All Reactor blocks are aware of their associated Controller._
 * _^ The Controller is informed when a Reactor block is broken and invalidated._
-
-Some ideas that are on the table include, but are not limited to or guaranteed to be implemented;
-* Config option for Reactant decay (for those wanting a system to maintain).
-* _^ Reactor Waste Port to accumulate product decay ( e.g. Iron Dust )._
-* Capacitors connect and split energy
