@@ -89,7 +89,7 @@ public class RenderTileEntityReactorController extends TileEntitySpecialRenderer
         double minV = (double)icon.getMinV();
         double maxV = (double)icon.getMaxV();
         
-        int percentage = tile.isValid() ? tile.getReactorEfficiencyScaled(100) : -1;
+        int percentage = tile.isActive() ? tile.getReactorEfficiencyScaled(100) : -1;
         
         int xPos;
         int yPos = 12;
