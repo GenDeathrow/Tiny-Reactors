@@ -31,9 +31,27 @@ public class ContainerReactorController extends Container
 	}
 	
 	@Override
-	// TODO: Handle state.
 	public ItemStack transferStackInSlot(EntityPlayer player, int index)
 	{
-		return null;
+		Slot slot = getSlot(index);
+		
+		if(slot != null && slot.getHasStack())
+		{
+			ItemStack itemstack = slot.getStack();
+			ItemStack result = itemstack.copy();
+			
+			if(!mergeItemStack(itemstack, 0, 36, false))
+				return ItemStack.EMPTY;
+			
+			if(itemstack.getCount() == 0)
+				slot.putStack(ItemStack.EMPTY);
+			else
+				slot.onSlotChanged();
+			
+			slot.onTake(player, itemstack);
+			return result;
+		}
+		
+		return ItemStack.EMPTY;
 	}
 }
