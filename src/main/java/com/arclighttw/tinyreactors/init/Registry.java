@@ -10,6 +10,7 @@ import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -25,6 +26,8 @@ public class Registry
 	static Map<ResourceLocation, Block> BLOCKS = Maps.newHashMap();
 	static Map<ResourceLocation, Item> ITEMS = Maps.newHashMap();
 	static Map<ResourceLocation, Class<? extends TileEntity>> TILES = Maps.newHashMap();
+	
+	static Map<ResourceLocation, IRecipe> RECIPES = Maps.newHashMap();
 	
 	public static void registerBlock(Block block, String name)
 	{
@@ -50,9 +53,17 @@ public class Registry
 		ITEMS.put(item.getRegistryName(), item);
 	}
 	
+	public static void registerRecipe(IRecipe recipe, String name)
+	{
+		recipe.setRegistryName(new ResourceLocation(Reference.ID, name));
+		RECIPES.put(recipe.getRegistryName(), recipe);
+	}
+	
 	@SubscribeEvent
 	public static void onBlockRegister(RegistryEvent.Register<Block> event)
 	{
+		TRBlocks.onRegister();
+		
 		for(Map.Entry<ResourceLocation, Block> block : BLOCKS.entrySet())
 			event.getRegistry().register(block.getValue());
 		
@@ -68,7 +79,16 @@ public class Registry
 	}
 	
 	@SubscribeEvent
-	public static void onMModelRegister(ModelRegistryEvent event)
+	public static void onRecipeRegister(RegistryEvent.Register<IRecipe> event)
+	{
+		TRRecipes.onRegister();
+		
+		for(Map.Entry<ResourceLocation, IRecipe> recipe : RECIPES.entrySet())
+			event.getRegistry().register(recipe.getValue());
+	}
+	
+	@SubscribeEvent
+	public static void onModelRegister(ModelRegistryEvent event)
 	{
 		for(Map.Entry<ResourceLocation, Block> block : BLOCKS.entrySet())
 			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(block.getValue()), 0, new ModelResourceLocation(Reference.ID + ":" + block.getKey().getResourcePath(), "inventory"));

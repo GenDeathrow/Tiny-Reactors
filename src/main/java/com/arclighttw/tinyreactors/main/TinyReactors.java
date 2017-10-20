@@ -3,7 +3,6 @@ package com.arclighttw.tinyreactors.main;
 import java.io.File;
 
 import com.arclighttw.tinyreactors.config.ModConfig;
-import com.arclighttw.tinyreactors.init.TRBlocks;
 import com.arclighttw.tinyreactors.managers.GuiManager;
 import com.arclighttw.tinyreactors.network.MessageReactorController;
 import com.arclighttw.tinyreactors.proxy.CommonProxy;
@@ -35,8 +34,6 @@ public class TinyReactors
 	{
 		proxy.onPreInitialization(event);
 		ModConfig.initialize(new File(event.getModConfigurationDirectory(), "TinyReactors.cfg"));
-		
-		TRBlocks.onRegister();
 	}
 	
 	@Mod.EventHandler
