@@ -11,9 +11,11 @@ Build a tiny reactor... Or a massive one!
 ## Tracker
 
 _Nothing here is a good sign ( it means there are no bug checks/fixes required at this time )._
+
+* Check that destroying the Controller closes the UI for other players ( 3 player Server test )
+
 * RF, Tesla, IC2 support ( Hatchery )
 * Reimplement Capacitors ( with connected stats ).
-* Destroying Controller <- should boot out players currently using it.
 
 ## About
 
@@ -39,11 +41,17 @@ You can modify the rates of all the default ores or even remove them entirely, a
 * Config option for Reactant decay ( for those wanting a system to maintain ).
 * _^ Reactor Waste Port to accumulate product decay._
 * Capacitors connect and split energy.
+* Tiered Energy Ports.
+* Reactor Controller allows redstone interaction ( Ignored, Inactive, Active ).
+* Reactor Controller acts as an energy buffer ( NOT an IEnergyStorage ).
+* _^ Config option for Reactor Meltdown if Controller overfills power?_
+* _^ Would need to implement Comparator methods so can be deactivated by redstone if nearing full._
 
 ### Version 0.3.1 is set to make the following changes;
 
 __Front-End:__
-* The Reactor Controller is now controlled from a UI and can be enabled/disabled at will ( if part of a valid structure ).
+* The Reactor Controller is now controlled from a UI.
+* The Reactor can be enabled and disabled after a valid structure built.
 
 __Back-End:__
 * The Reactor Controller now has a _valid_ and _active_ flag to allow valid structures to be disabled.
