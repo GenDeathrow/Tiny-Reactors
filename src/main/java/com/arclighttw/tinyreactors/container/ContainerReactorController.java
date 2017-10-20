@@ -5,12 +5,15 @@ import com.arclighttw.tinyreactors.tiles.TileEntityReactorController;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
+import net.minecraft.inventory.IContainerListener;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
 public class ContainerReactorController extends Container
 {
 	final TileEntityReactorController controller;
+	
+	boolean isValid, isActive;
 	
 	public ContainerReactorController(InventoryPlayer player, TileEntityReactorController controller)
 	{
@@ -33,25 +36,36 @@ public class ContainerReactorController extends Container
 	@Override
 	public ItemStack transferStackInSlot(EntityPlayer player, int index)
 	{
-		Slot slot = getSlot(index);
-		
-		if(slot != null && slot.getHasStack())
+		return ItemStack.EMPTY;
+	}
+	
+	@Override
+	public void detectAndSendChanges()
+	{
+		for(IContainerListener listener : listeners)
 		{
-			ItemStack itemstack = slot.getStack();
-			ItemStack result = itemstack.copy();
+			if(isValid != controller.isStructureValid())
+				listener.sendWindowProperty(this, 0, controller.isStructureValid() ? 1 : 0);
 			
-			if(!mergeItemStack(itemstack, 0, 36, false))
-				return ItemStack.EMPTY;
-			
-			if(itemstack.getCount() == 0)
-				slot.putStack(ItemStack.EMPTY);
-			else
-				slot.onSlotChanged();
-			
-			slot.onTake(player, itemstack);
-			return result;
+			if(isActive != controller.isActive())
+				listener.sendWindowProperty(this, 1, controller.isActive() ? 1 : 0);
 		}
 		
-		return ItemStack.EMPTY;
+		isValid = controller.isStructureValid();
+		isActive = controller.isActive();
+	}
+	
+	@Override
+	public void updateProgressBar(int id, int data)
+	{
+		switch(id)
+		{
+		case 0:
+			controller.setValid(data == 1 ? true : false);
+			break;
+		case 1:
+			controller.setActive(data == 1 ? true : false);
+			break;
+		}
 	}
 }
