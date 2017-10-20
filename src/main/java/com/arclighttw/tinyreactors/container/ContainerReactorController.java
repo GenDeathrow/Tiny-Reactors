@@ -11,7 +11,7 @@ import net.minecraft.item.ItemStack;
 
 public class ContainerReactorController extends Container
 {
-	final TileEntityReactorController controller;
+	public final TileEntityReactorController controller;
 	
 	boolean isValid, isActive;
 	

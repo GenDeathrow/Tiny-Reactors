@@ -4,12 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 import com.arclighttw.tinyreactors.config.TRConfig;
+import com.arclighttw.tinyreactors.container.ContainerReactorController;
 import com.arclighttw.tinyreactors.init.TRBlocks;
 import com.arclighttw.tinyreactors.tiles.TileEntityReactorController;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -92,9 +94,23 @@ public class ReactorManager
 		REACTORS.add(pos);
 	}
 	
-	public static void removeReactor(BlockPos pos)
+	public static void removeReactor(World world, BlockPos pos)
 	{
 		REACTORS.remove(pos);
+		
+		if(!world.isRemote)
+		{
+			for(EntityPlayer player : world.playerEntities)
+			{
+				if(player.openContainer != null && player.openContainer instanceof ContainerReactorController)
+				{
+					ContainerReactorController controller = (ContainerReactorController)player.openContainer;
+					
+					if(controller.controller.getPos().equals(pos))
+						player.closeScreen();
+				}
+			}
+		}
 	}
 	
 	public static void validateAllReactors(World world)
@@ -115,6 +131,6 @@ public class ReactorManager
 		}
 		
 		for(BlockPos pos : invalid)
-			removeReactor(pos);
+			removeReactor(world, pos);
 	}
 }

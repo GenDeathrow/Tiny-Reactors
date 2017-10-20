@@ -37,7 +37,7 @@ public class BlockReactorController extends BlockReactorComponent
 	@Override
 	public void breakBlock(World world, BlockPos pos, IBlockState state)
 	{
-		ReactorManager.removeReactor(pos);
+		ReactorManager.removeReactor(world, pos);
 		super.breakBlock(world, pos, state);
 	}
 	
