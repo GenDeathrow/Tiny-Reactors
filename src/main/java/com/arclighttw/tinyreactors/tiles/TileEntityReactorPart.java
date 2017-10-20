@@ -79,6 +79,6 @@ public class TileEntityReactorPart extends TileEntity implements IReactorCompone
 		if(controller == null)
 			return;
 		
-		controller.setState(false);
+		controller.setValid(false);
 	}
 }
