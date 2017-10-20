@@ -29,7 +29,7 @@ public class TileEntityReactorEnergyPort extends TileEntityReactorPart implement
 	@Override
 	public void update()
 	{
-		if(controller == null || !controller.isValid())
+		if(controller == null || !controller.isActive())
 		{
 			receiveEnergyInternal(yield / -4);
 			return;
@@ -139,6 +139,9 @@ public class TileEntityReactorEnergyPort extends TileEntityReactorPart implement
 		
 		if(energy > capacity)
 			energy = capacity;
+		
+		if(energy < 0)
+			energy = 0;
 	}
 	
 	public void setOutput(int yield)
