@@ -1,17 +1,24 @@
 package com.arclighttw.tinyreactors.managers;
 
+import java.util.List;
 import java.util.Map;
 
 import com.arclighttw.tinyreactors.config.TRConfig;
 import com.arclighttw.tinyreactors.init.TRBlocks;
+import com.arclighttw.tinyreactors.tiles.TileEntityReactorController;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import net.minecraft.block.Block;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Loader;
 
 public class ReactorManager
 {
+	static List<BlockPos> REACTORS =  Lists.newArrayList();
 	static Map<ResourceLocation, Integer> REACTANTS = Maps.newHashMap();
 	
 	static int MAXIMUM_YIELD = -1;
@@ -78,5 +85,36 @@ public class ReactorManager
 	public static int getMaximumReactantRate()
 	{
 		return MAXIMUM_YIELD;
+	}
+	
+	public static void addReactor(BlockPos pos)
+	{
+		REACTORS.add(pos);
+	}
+	
+	public static void removeReactor(BlockPos pos)
+	{
+		REACTORS.remove(pos);
+	}
+	
+	public static void validateAllReactors(World world)
+	{
+		List<BlockPos> invalid = Lists.newArrayList();
+		
+		for(BlockPos pos : REACTORS)
+		{
+			TileEntity tile = world.getTileEntity(pos);
+			
+			if(tile == null || !(tile instanceof TileEntityReactorController))
+			{
+				invalid.add(pos);
+				continue;
+			}
+			
+			((TileEntityReactorController)tile).checkStructure();
+		}
+		
+		for(BlockPos pos : invalid)
+			removeReactor(pos);
 	}
 }
