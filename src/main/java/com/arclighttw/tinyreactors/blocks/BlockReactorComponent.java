@@ -1,8 +1,6 @@
 package com.arclighttw.tinyreactors.blocks;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
+import com.arclighttw.tinyreactors.managers.ReactorManager;
 import com.arclighttw.tinyreactors.tiles.IReactorComponent;
 import com.arclighttw.tinyreactors.tiles.TileEntityReactorController;
 import com.arclighttw.tinyreactors.tiles.TileEntityReactorPart;
@@ -22,6 +20,15 @@ public class BlockReactorComponent extends BlockTiny implements ITileEntityProvi
 	}
 	
 	@Override
+	public void onBlockAdded(World world, BlockPos pos, IBlockState state)
+	{
+		super.onBlockAdded(world, pos, state);
+		
+		if(!world.isRemote)
+			ReactorManager.validateAllReactors(world);
+	}
+	
+	@Override
 	public void breakBlock(World world, BlockPos pos, IBlockState state)
 	{
 		TileEntity tile = world.getTileEntity(pos);
@@ -29,18 +36,7 @@ public class BlockReactorComponent extends BlockTiny implements ITileEntityProvi
 		if(tile != null)
 		{
 			if(tile instanceof TileEntityReactorController)
-			{
-				try
-				{
-					Method setState = TileEntityReactorController.class.getDeclaredMethod("setState", Boolean.class);
-					setState.setAccessible(true);
-					setState.invoke(tile, false);
-					setState.setAccessible(false);
-				}
-				catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException e)
-				{
-				}
-			}
+				((TileEntityReactorController)tile).setValid(false);
 			
 			if(tile instanceof IReactorComponent)
 				((IReactorComponent)tile).invalidateController();

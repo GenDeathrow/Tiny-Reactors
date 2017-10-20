@@ -2,6 +2,7 @@ package com.arclighttw.tinyreactors.blocks;
 
 import com.arclighttw.tinyreactors.main.TinyReactors;
 import com.arclighttw.tinyreactors.managers.GuiManager;
+import com.arclighttw.tinyreactors.managers.ReactorManager;
 import com.arclighttw.tinyreactors.tiles.TileEntityReactorController;
 
 import net.minecraft.block.material.Material;
@@ -27,6 +28,20 @@ public class BlockReactorController extends BlockReactorComponent
 	}
 	
 	@Override
+	public void onBlockAdded(World world, BlockPos pos, IBlockState state)
+	{
+		ReactorManager.addReactor(pos);
+		super.onBlockAdded(world, pos, state);
+	}
+	
+	@Override
+	public void breakBlock(World world, BlockPos pos, IBlockState state)
+	{
+		ReactorManager.removeReactor(pos);
+		super.breakBlock(world, pos, state);
+	}
+	
+	@Override
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
 	{
 		boolean shift = super.onBlockActivated(world, pos, state, player, hand, facing, hitX, hitY, hitZ);
@@ -38,14 +53,11 @@ public class BlockReactorController extends BlockReactorComponent
 		{
 			TileEntity tile = world.getTileEntity(pos);
 			
-			if(tile == null || !(tile instanceof TileEntityReactorController))
-				return true;
-			
-			TileEntityReactorController controller = (TileEntityReactorController)tile;
-			controller.checkValidity(true);
-			
-			if(controller.isValid())
+			if(tile != null && tile instanceof TileEntityReactorController)
+			{
+				((TileEntityReactorController)tile).checkStructure();
 				player.openGui(TinyReactors.instance, GuiManager.REACTOR_CONTROLLER, world, pos.getX(), pos.getY(), pos.getZ());
+			}
 		}
 		
 		return true;
