@@ -8,14 +8,12 @@ Build a tiny reactor... Or a massive one!
 * [Guide](#guide)
 * [Roadmap](#roadmap)
 
+
 ## Tracker
 
 _Nothing here is a good sign ( it means there are no bug checks/fixes required at this time )._
-
-* Check that destroying the Controller closes the UI for other players ( 3 player Server test )
-
-* RF, Tesla, IC2 support ( Hatchery )
-* Reimplement Capacitors ( with connected stats ).
+* Controller UI updates when block invalidates but not when validates.
+* Loadbalancing for Reactor Controller
 
 ## About
 
@@ -24,6 +22,7 @@ Tiny Reactors is all about bringing power generation to Minecraft through the co
 All Reactants are fully configurable at runtime using the Mod Options.  The minimum reactor size is a 3 x 3 x 3 structure, providing 1 Reactant slot; there is no configured maximum reactor size, so expand to your needs!
 
 Originally inspired by [Kashdeya](https://www.twitter.com/Kashdeya), with content created and authored by [ArclightTW](https://www.twitter.com/ArclightTW), Tiny Reactors is [SNIs](http://www.skillsnotincluded.com) take on the multiblock reactor mod style!
+
 
 ## Guide
 
@@ -40,18 +39,23 @@ You can modify the rates of all the default ores or even remove them entirely, a
 
 * Config option for Reactant decay ( for those wanting a system to maintain ).
 * _^ Reactor Waste Port to accumulate product decay._
-* Capacitors connect and split energy.
+* _^ Radioactive Waste Ingot._
+
 * Tiered Energy Ports.
-* Reactor Controller allows redstone interaction ( Ignored, Inactive, Active ).
-* Reactor Controller acts as an energy buffer ( NOT an IEnergyStorage ).
-* _^ Config option for Reactor Meltdown if Controller overfills power?_
+
+* UI for Energy Port to show current energy level.
+
+* Reactor Controller Tier 2 allows redstone interaction ( Ignored, Inactive, Active ).
 * _^ Would need to implement Comparator methods so can be deactivated by redstone if nearing full._
+* _^ Click efficiency bar to increase/decrease power output._
 
 ### Version 0.3.1 is set to make the following changes;
 
 __Front-End:__
 * The Reactor Controller is now controlled from a UI.
 * The Reactor can be enabled and disabled after a valid structure built.
+* Reactor Energy Ports and Capacitors now produce RF correctly.
+* Config option for Reactor structures to go into meltdown if Reactor Controller energy buffer overfills.
 
 __Back-End:__
 * The Reactor Controller now has a _valid_ and _active_ flag to allow valid structures to be disabled.
