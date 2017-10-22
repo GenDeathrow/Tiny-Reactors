@@ -3,7 +3,7 @@ package com.arclighttw.tinyreactors.blocks;
 import com.arclighttw.tinyreactors.managers.ReactorManager;
 import com.arclighttw.tinyreactors.tiles.IReactorComponent;
 import com.arclighttw.tinyreactors.tiles.TileEntityReactorController;
-import com.arclighttw.tinyreactors.tiles.TileEntityReactorPart;
+import com.arclighttw.tinyreactors.tiles.TileEntityReactorComponent;
 
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
@@ -33,7 +33,7 @@ public class BlockReactorComponent extends BlockTiny implements ITileEntityProvi
 	{
 		TileEntity tile = world.getTileEntity(pos);
 		
-		if(tile != null)
+		if(!world.isRemote && tile != null)
 		{
 			if(tile instanceof TileEntityReactorController)
 				((TileEntityReactorController)tile).setValid(false);
@@ -48,7 +48,7 @@ public class BlockReactorComponent extends BlockTiny implements ITileEntityProvi
 	@Override
 	public TileEntity createNewTileEntity(World world, int metadata)
 	{
-		return new TileEntityReactorPart();
+		return new TileEntityReactorComponent();
 	}
 	
 }
