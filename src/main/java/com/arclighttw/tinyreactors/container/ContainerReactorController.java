@@ -14,6 +14,7 @@ public class ContainerReactorController extends Container
 	public final TileEntityReactorController controller;
 	
 	boolean isValid, isActive;
+	int energy, capacity;
 	
 	public ContainerReactorController(InventoryPlayer player, TileEntityReactorController controller)
 	{
@@ -49,10 +50,18 @@ public class ContainerReactorController extends Container
 			
 			if(isActive != controller.isActive())
 				listener.sendWindowProperty(this, 1, controller.isActive() ? 1 : 0);
+			
+			if(energy != controller.getEnergyStored())
+				listener.sendWindowProperty(this, 2, controller.getEnergyStored());
+			
+			if(capacity != controller.getMaxEnergyStored())
+				listener.sendWindowProperty(this, 3, controller.getMaxEnergyStored());
 		}
 		
 		isValid = controller.isStructureValid();
 		isActive = controller.isActive();
+		energy = controller.getEnergyStored();
+		capacity = controller.getMaxEnergyStored();
 	}
 	
 	@Override
@@ -65,6 +74,12 @@ public class ContainerReactorController extends Container
 			break;
 		case 1:
 			controller.setActive(data == 1 ? true : false);
+			break;
+		case 2:
+			controller.setEnergyStored(data);
+			break;
+		case 3:
+			controller.setMaxEnergyStored(data);
 			break;
 		}
 	}

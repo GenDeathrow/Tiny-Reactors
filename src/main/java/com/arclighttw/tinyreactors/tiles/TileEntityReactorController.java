@@ -1,9 +1,15 @@
 package com.arclighttw.tinyreactors.tiles;
 
+import java.util.List;
+import java.util.function.Consumer;
+
+import com.arclighttw.tinyreactors.config.TRConfig;
 import com.arclighttw.tinyreactors.init.TRBlocks;
 import com.arclighttw.tinyreactors.main.TinyReactors;
 import com.arclighttw.tinyreactors.managers.ReactorManager;
 import com.arclighttw.tinyreactors.network.MessageReactorStateClient;
+import com.arclighttw.tinyreactors.storage.EnergyStorageRF;
+import com.google.common.collect.Lists;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
@@ -12,19 +18,64 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class TileEntityReactorController extends TileEntity
+public class TileEntityReactorController extends TileEntity implements ITickable
 {
 	boolean isValid, isActive;
+	boolean hasLoaded;
 	
 	int xStart, yStart, zStart;
 	int xEnd, yEnd, zEnd;
 	
 	int availableYield, maximumYield;
+	
+	List<TileEntityReactorEnergyPort> energyPorts;
+	EnergyStorageRF energy;
+	
+	public TileEntityReactorController()
+	{
+		energyPorts = Lists.newArrayList();
+		energy = new EnergyStorageRF(1000000);
+		
+		checkStructure();
+	}
+	
+	@Override
+	public void update()
+	{
+		if(hasLoaded)
+		{
+			checkStructure();
+			hasLoaded = true;
+			return;
+		}
+		
+		if(isActive() && energyPorts.size() > 0)
+		{
+			int maximumPerPort = availableYield / energyPorts.size();
+			int remaining = availableYield;
+			
+			for(TileEntityReactorEnergyPort energyPort : energyPorts)
+			{
+				int expended;
+				
+				if(maximumPerPort == 0)
+					expended = energyPort.receiveEnergy(remaining, false);
+				else	
+					expended = energyPort.receiveEnergy(Math.min(maximumPerPort, 1024), false);
+				
+				remaining -= expended;
+			}
+			
+			if(remaining > 0)
+				modifyEnergy(remaining);
+		}
+	}
 	
 	@Override
 	public SPacketUpdateTileEntity getUpdatePacket()
@@ -63,6 +114,8 @@ public class TileEntityReactorController extends TileEntity
 		
 		compound.setInteger("availableYield", availableYield);
 		compound.setInteger("maximumYield", maximumYield);
+
+		energy.writeToNBT(compound);
 		
 		return compound;
 	}
@@ -85,12 +138,85 @@ public class TileEntityReactorController extends TileEntity
 		
 		availableYield = compound.getInteger("availableYield");
 		maximumYield = compound.getInteger("maximumYield");
+		
+		energy.readFromNBT(compound);
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public int getReactorEfficiencyScaled(int scale)
+	public int getEnergyStoredScaled(int scale)
 	{
-		return isActive ? (int)(scale * ((float)availableYield / (float)maximumYield)) : 0;
+		return (int)(scale * ((float)energy.getEnergyStored() / (float)energy.getMaxEnergyStored()));
+	}
+	
+	public int getEnergyStored()
+	{
+		return energy.getEnergyStored();
+	}
+	
+	public void setEnergyStored(int energy)
+	{
+		this.energy.setEnergyStored(energy);
+	}
+	
+	public int getMaxEnergyStored()
+	{
+		return energy.getMaxEnergyStored();
+	}
+	
+	public void setMaxEnergyStored(int capacity)
+	{
+		energy.setCapacity(capacity);
+	}
+	
+	public void modifyEnergy(int energy)
+	{
+		if(this.energy.getEnergyStored() + energy < this.energy.getMaxEnergyStored())
+		{
+			this.energy.modifyEnergyStored(energy);
+			return;
+		}
+		
+		if(TRConfig.REACTOR_MELTDOWN && !world.isRemote)
+		{
+			switch(TRConfig.REACTOR_MELTDOWN_TYPE)
+			{
+			case CONTROLLER_ONLY:
+				world.createExplosion(null, pos.getX(), pos.getY(), pos.getZ(), 250F, true);
+				world.setBlockToAir(pos);
+				break;
+			case REACTANTS_ONLY:
+				world.createExplosion(null, xStart + (xEnd - xStart), yStart + (yEnd - yStart), zStart + (zEnd - zStart), 250F, true);
+				
+				loopReactor((pos) -> {
+					if(world.getTileEntity(pos) == null)
+						world.setBlockToAir(pos);
+				});
+				
+				world.setBlockToAir(pos);
+				break;
+			case CASING_ONLY:
+				world.createExplosion(null, xStart + (xEnd - xStart), yStart + (yEnd - yStart), zStart + (zEnd - zStart), 250F, true);
+				
+				loopReactor((pos) -> {
+					if(ReactorManager.isValidCasing(world.getBlockState(pos).getBlock()) && world.getBlockState(pos).getBlock() != TRBlocks.REACTOR_CONTROLLER)
+						world.setBlockToAir(pos);
+				});
+				
+				world.setBlockToAir(pos);
+				
+				break;
+			case ENTIRE_REACTOR:
+				world.createExplosion(null, xStart + (xEnd - xStart), yStart + (yEnd - yStart), zStart + (zEnd - zStart), 250F, true);
+				
+				loopReactor((pos) -> {
+					if(world.getBlockState(pos) != TRBlocks.REACTOR_CONTROLLER)
+						world.setBlockToAir(pos);
+				});
+				
+				world.setBlockToAir(pos);
+				break;
+			}
+		}
 	}
 	
 	public boolean isStructureValid()
@@ -255,10 +381,11 @@ public class TileEntityReactorController extends TileEntity
 			boolean isReactor = true;
 			boolean hasController = false;
 			boolean hasOutput = false;
-			int outputCount = 0;
 			
 			availableYield = 0;
 			maximumYield = 0;
+		
+			energyPorts = Lists.newArrayList();
 			
 			for(int x = xStart; x <= xEnd; x++)
 			{
@@ -275,7 +402,7 @@ public class TileEntityReactorController extends TileEntity
 						if(b == TRBlocks.REACTOR_ENERGY_PORT)
 						{
 							hasOutput = true;
-							outputCount++;
+							energyPorts.add((TileEntityReactorEnergyPort)world.getTileEntity(pos));
 						}
 						
 						TileEntity tile = world.getTileEntity(pos);
@@ -318,7 +445,7 @@ public class TileEntityReactorController extends TileEntity
 				}
 			}
 			
-			if(!hasController || !hasOutput || outputCount > 1)
+			if(!hasController || !hasOutput || energyPorts.size() > 1)
 			{
 				isReactor = false;
 				availableYield = 0;
@@ -339,36 +466,13 @@ public class TileEntityReactorController extends TileEntity
 			return;
 		}
 		
-		syncEnergyPorts();
 		syncServerToClient();
 	}
 	
 	public void setActive(boolean active)
 	{
 		isActive = active;
-		syncEnergyPorts();
 		syncServerToClient();
-	}
-	
-	void syncEnergyPorts()
-	{
-		BlockPos pos = null;
-		
-		for(int x = xStart; x <= xEnd; x++)
-		{
-			for(int z = zStart; z <= zEnd; z++)
-			{
-				for(int y = yStart; y >= yEnd; y--)
-				{
-					pos = new BlockPos(x, y, z);
-					
-					TileEntity tile = world.getTileEntity(pos);
-					
-					if(tile != null && tile instanceof TileEntityReactorEnergyPort)
-						((TileEntityReactorEnergyPort)tile).setOutput(isActive ? availableYield : 0);
-				}
-			}
-		}
 	}
 	
 	void syncServerToClient()
@@ -378,6 +482,27 @@ public class TileEntityReactorController extends TileEntity
 		world.scheduleBlockUpdate(pos, getBlockType(), 0, 0);
 		markDirty();
 		
-		TinyReactors.NETWORK.sendToAll(new MessageReactorStateClient());
+		if(!world.isRemote)
+			TinyReactors.NETWORK.sendToAll(new MessageReactorStateClient());
+	}
+	
+	void loopReactor(Consumer<BlockPos> action)
+	{
+		if(action == null)
+			return;
+		
+		BlockPos pos = null;
+		
+		for(int x = xStart; x <= xEnd; x++)
+		{
+			for(int z = zStart; z <= zEnd; z++)
+			{
+				for(int y = yStart; y >= yEnd; y--)
+				{
+					pos = new BlockPos(x, y, z);
+					action.accept(pos);
+				}
+			}
+		}
 	}
 }
