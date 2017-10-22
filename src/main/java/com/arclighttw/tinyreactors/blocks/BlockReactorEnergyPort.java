@@ -40,8 +40,10 @@ public class BlockReactorEnergyPort extends BlockReactorComponent
 			if(tile == null || !(tile instanceof TileEntityReactorEnergyPort))
 				return true;
 			
+			EnumFacing blockFacing = state.getValue(BlockTiny.FACING);
+			
 			TileEntityReactorEnergyPort energyPort = (TileEntityReactorEnergyPort)tile;
-			player.sendMessage(new TextComponentString(String.format("Stored: %d RF; Capacity: %d RF", energyPort.getEnergyStored(), energyPort.getMaxEnergyStored())));
+			player.sendMessage(new TextComponentString(String.format("Stored: %d RF; Capacity: %d RF", energyPort.getEnergyStored(blockFacing), energyPort.getMaxEnergyStored(blockFacing))));
 		}
 		
 		return true;

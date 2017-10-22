@@ -1,106 +1,93 @@
 package com.arclighttw.tinyreactors.tiles;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 import com.arclighttw.tinyreactors.blocks.BlockTiny;
+import com.arclighttw.tinyreactors.storage.EnergyStorageRF;
 
+import cofh.redstoneflux.api.IEnergyProvider;
+import cofh.redstoneflux.api.IEnergyReceiver;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ITickable;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.energy.IEnergyStorage;
+import net.minecraftforge.energy.CapabilityEnergy;
 
-public class TileEntityReactorEnergyPort extends TileEntityReactorPart implements IEnergyStorage, ITickable
+public class TileEntityReactorEnergyPort extends TileEntityReactorComponent implements IEnergyProvider
 {
-	int energy;
-	int capacity;
-	int maxExtract;
+	EnergyStorageRF energy;
 	
 	int yield;
 	
 	public TileEntityReactorEnergyPort()
 	{
-		capacity = 1024000;
-		maxExtract = 1024;
+		energy = new EnergyStorageRF(1000000);
+	}
+	
+	@Override
+	public int getEnergyStored(EnumFacing from)
+	{
+		return energy.getEnergyStored();
+	}
+
+	@Override
+	public int getMaxEnergyStored(EnumFacing from)
+	{
+		return energy.getMaxEnergyStored();
+	}
+
+	@Override
+	public boolean canConnectEnergy(EnumFacing from)
+	{
+		return true;
+	}
+
+	@Override
+	public int extractEnergy(EnumFacing from, int maxExtract, boolean simulate)
+	{
+		return energy.extractEnergy(maxExtract, simulate);
 	}
 	
 	@Override
 	public void update()
 	{
-		if(controller == null || !controller.isActive())
-		{
-			receiveEnergyInternal(yield / -4);
+		if(energy.getEnergyStored() <= 0)
 			return;
+		
+		IBlockState block = world.getBlockState(pos);
+		EnumFacing facing = null;
+		
+		try
+		{
+			facing = block.getValue(BlockTiny.FACING);
+		}
+		catch(IllegalArgumentException e)
+		{
 		}
 		
-		if(getEnergyStored() < getMaxEnergyStored())
-			receiveEnergyInternal(yield);
-		
-		EnumFacing facing = world.getBlockState(pos).getValue(BlockTiny.FACING);
-		TileEntity tile = world.getTileEntity(getPos().offset(facing));
-		
-		if(tile == null || tile instanceof TileEntityReactorController || tile instanceof IReactorComponent)
+		if(facing == null)
 			return;
 		
-		if(attemptForgeEnergy(tile))
-			return;
+		TileEntity tile = world.getTileEntity(pos.offset(facing));
 		
-		attemptRFEnergy(facing.getOpposite(), tile);
+		if(tile != null && tile instanceof IEnergyReceiver)
+		{
+			int extracted = extractEnergy(facing, 1024, true);
+			
+			if(extracted > 0)
+			{
+				int received = ((IEnergyReceiver)tile).receiveEnergy(facing.getOpposite(), extracted, false);
+				extractEnergy(facing, received, false);
+			}
+		}
 	}
-	
-	@Override
-	public int extractEnergy(int extract, boolean simulate)
-	{
-		int amount = extract <= energy ? extract : energy;
-		
-		if(!simulate)
-			energy -= amount;
-		
-		if(energy < 0)
-			energy = 0;
-		
-		return amount;
-	}
-	
-	@Override
-	public int receiveEnergy(int receive, boolean simulate)
-	{
-		return 0;
-	}
-	
-	@Override
-	public int getEnergyStored()
-	{
-		return energy;
-	}
-	
-	@Override
-	public int getMaxEnergyStored()
-	{
-		return capacity;
-	}
-	
-	@Override
-	public boolean canExtract()
-	{
-		return true;
-	}
-	
-	@Override
-	public boolean canReceive()
-	{
-		return false;
-	}
-	
+
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound compound)
 	{
 		super.writeToNBT(compound);
 		
-		compound.setInteger("energy", energy);
 		compound.setInteger("yield", yield);
+		energy.writeToNBT(compound);
 		
 		return compound;
 	}
@@ -110,86 +97,28 @@ public class TileEntityReactorEnergyPort extends TileEntityReactorPart implement
 	{
 		super.readFromNBT(compound);
 		
-		energy = compound.getInteger("energy");
 		yield = compound.getInteger("yield");
+		energy.readFromNBT(compound);
 	}
 	
 	@Override
 	public boolean hasCapability(Capability<?> capability, EnumFacing facing)
 	{
-		if(capability != null && capability.getName().equals("net.minecraftforge.energy.IEnergyStorage"))
-			return true;
-		
-		return super.hasCapability(capability, facing);
+		return capability == CapabilityEnergy.ENERGY || super.hasCapability(capability, facing);
 	}
 	
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T getCapability(Capability<T> capability, EnumFacing facing)
 	{
-		if(hasCapability(capability, facing))
-			return (T)this;
+		if(capability == CapabilityEnergy.ENERGY)
+			return (T)energy;
 		
 		return super.getCapability(capability, facing);
 	}
 	
-	public void receiveEnergyInternal(int receive)
+	public int receiveEnergy(int maxReceive, boolean simulate)
 	{
-		energy += receive;
-		
-		if(energy > capacity)
-			energy = capacity;
-		
-		if(energy < 0)
-			energy = 0;
-	}
-	
-	public void setOutput(int yield)
-	{
-		this.yield = yield;
-	}
-	
-	boolean attemptForgeEnergy(TileEntity tile)
-	{
-		try
-		{
-			Method receiveEnergy = tile.getClass().getMethod("receiveEnergy", new Class[] { int.class, boolean.class });
-			
-			if(receiveEnergy == null)
-				return false;
-			
-			receiveEnergy.invoke(tile, extractEnergy(yield, false));
-			return true;
-		}
-		catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
-		{
-		}
-		catch(NoSuchMethodException | SecurityException e)
-		{
-		}
-		
-		return false;
-	}
-	
-	boolean attemptRFEnergy(EnumFacing sourceFacing, TileEntity tile)
-	{
-		try
-		{
-			Method receiveEnergy = tile.getClass().getMethod("receiveEnergy", new Class[] { EnumFacing.class, int.class, boolean.class });
-			
-			if(receiveEnergy == null)
-				return false;
-			
-			receiveEnergy.invoke(sourceFacing, tile, extractEnergy(yield, false));
-			return true;
-		}
-		catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
-		{
-		}
-		catch(NoSuchMethodException | SecurityException e)
-		{
-		}
-		
-		return false;
+		return energy.receiveEnergy(maxReceive, simulate);
 	}
 }
