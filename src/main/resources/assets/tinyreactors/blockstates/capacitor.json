@@ -1,0 +1,28 @@
+{
+	"variants":
+	{
+		"facing=north":
+		{
+			"model": "tinyreactors:capacitor",
+			"y": 0
+		},
+		
+		"facing=south":
+		{
+			"model": "tinyreactors:capacitor",
+			"y": 180
+		},
+		
+		"facing=west":
+		{
+			"model": "tinyreactors:capacitor",
+			"y": 270
+		},
+		
+		"facing=east":
+		{
+			"model": "tinyreactors:capacitor",
+			"y": 90
+		}
+	}
+}

@@ -5,3 +5,5 @@ tile.tinyreactors:reactor_energy_port.name=Reactor Energy Port
 
 tile.tinyreactors:reactor_casing.name=Reactor Casing
 tile.tinyreactors:reactor_glass.name=Reactor Glass
+
+tile.tinyreactors:capacitor.name=Capacitor
