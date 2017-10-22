@@ -2,6 +2,7 @@ package com.arclighttw.tinyreactors.config;
 
 import java.io.File;
 
+import com.arclighttw.tinyreactors.config.TRConfig.MeltdownType;
 import com.arclighttw.tinyreactors.main.Reference;
 import com.arclighttw.tinyreactors.managers.ReactorManager;
 
@@ -35,13 +36,16 @@ public class ModConfig
 	{
 		String category;
 		
-		category = "Settings";
-		config.addCustomCategoryComment(category, "Core Tiny Reactor settings.");
+		category = "General";
+		config.addCustomCategoryComment(category, "General Tiny Reactor settings.");
+		
+		TRConfig.REACTOR_MELTDOWN = config.getBoolean("Reactor Meltdown", category, TRConfig.REACTOR_MELTDOWN, TRConfig.REACTOR_MELTDOWN_LABEL);
+		TRConfig.REACTOR_MELTDOWN_TYPE = MeltdownType.values()[config.getInt("Meltdown Type", category, TRConfig.REACTOR_MELTDOWN_TYPE.ordinal(), 0, MeltdownType.values().length - 1, TRConfig.REACTOR_MELTDOWN_TYPE_LABEL)];
 		
 		category = "Reactants";
 		config.addCustomCategoryComment(category, "Specify the rate per tick of each Block when placed inside an active reactor.");
 		
-		TRConfig.REACTANT_REGISTRY = config.getStringList("Entries", category, TRConfig.REACTANT_REGISTRY, "Entries should be input in the format (rate is specified per tick):\nmod_id:block_name:rate");
+		TRConfig.REACTANT_REGISTRY = config.getStringList("Entries", category, TRConfig.REACTANT_REGISTRY, TRConfig.REACTANT_REGISTRY_LABEL);
 		
 		ReactorManager.populate();
 		
