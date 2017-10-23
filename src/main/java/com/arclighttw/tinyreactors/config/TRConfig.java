@@ -2,7 +2,7 @@ package com.arclighttw.tinyreactors.config;
 
 public class TRConfig
 {
-	public static boolean REACTOR_MELTDOWN = true;
+	public static boolean REACTOR_MELTDOWN = false;
 	public static String REACTOR_MELTDOWN_LABEL = "Should the Reactor go into meltdown when the Controller's internal energy buffer fills?";
 	
 	public static MeltdownType REACTOR_MELTDOWN_TYPE = MeltdownType.CONTROLLER_ONLY;
