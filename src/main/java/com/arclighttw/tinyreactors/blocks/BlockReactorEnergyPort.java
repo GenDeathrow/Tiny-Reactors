@@ -1,5 +1,7 @@
 package com.arclighttw.tinyreactors.blocks;
 
+import com.arclighttw.tinyreactors.main.TinyReactors;
+import com.arclighttw.tinyreactors.managers.GuiManager;
 import com.arclighttw.tinyreactors.tiles.TileEntityReactorEnergyPort;
 
 import net.minecraft.block.material.Material;
@@ -9,7 +11,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 
 public class BlockReactorEnergyPort extends BlockReactorComponent
@@ -22,7 +23,7 @@ public class BlockReactorEnergyPort extends BlockReactorComponent
 	@Override
 	public TileEntity createNewTileEntity(World world, int metadata)
 	{
-		return new TileEntityReactorEnergyPort();
+		return new TileEntityReactorEnergyPort(1024);
 	}
 	
 	@Override
@@ -37,13 +38,8 @@ public class BlockReactorEnergyPort extends BlockReactorComponent
 		{
 			TileEntity tile = world.getTileEntity(pos);
 			
-			if(tile == null || !(tile instanceof TileEntityReactorEnergyPort))
-				return true;
-			
-			EnumFacing blockFacing = state.getValue(BlockTiny.FACING);
-			
-			TileEntityReactorEnergyPort energyPort = (TileEntityReactorEnergyPort)tile;
-			player.sendMessage(new TextComponentString(String.format("Stored: %d RF; Capacity: %d RF", energyPort.getEnergyStored(blockFacing), energyPort.getMaxEnergyStored(blockFacing))));
+			if(tile != null && tile instanceof TileEntityReactorEnergyPort)
+				player.openGui(TinyReactors.instance, GuiManager.REACTOR_ENERGY_PORT, world, pos.getX(), pos.getY(), pos.getZ());
 		}
 		
 		return true;

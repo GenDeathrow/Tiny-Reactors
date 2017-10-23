@@ -1,7 +1,10 @@
 package com.arclighttw.tinyreactors.tiles;
 
 import com.arclighttw.tinyreactors.blocks.BlockTiny;
+import com.arclighttw.tinyreactors.network.MessageEnergyPortServer.EnergyPortAction;
+import com.arclighttw.tinyreactors.network.MessageEnergyPortServer.EnergyPortMode;
 import com.arclighttw.tinyreactors.storage.EnergyStorageRF;
+import com.arclighttw.tinyreactors.util.Util;
 
 import cofh.redstoneflux.api.IEnergyProvider;
 import cofh.redstoneflux.api.IEnergyReceiver;
@@ -11,22 +14,101 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.energy.CapabilityEnergy;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class TileEntityReactorEnergyPort extends TileEntityReactorComponent implements IEnergyProvider
 {
-	EnergyStorageRF energy;
+	public int maxInput, maxOutput;
+	public int currentInput, currentOutput;
 	
-	int yield;
+	private boolean loaded;
+	
+	EnergyStorageRF energy;
 	
 	public TileEntityReactorEnergyPort()
 	{
-		energy = new EnergyStorageRF(1000000);
+	}
+	
+	public TileEntityReactorEnergyPort(int maxTransfer)
+	{
+		maxInput = maxOutput = maxTransfer;
+		currentInput = currentOutput = maxTransfer;
+		
+		energy = new EnergyStorageRF(1000000, currentInput, currentOutput);
+	}
+	
+	@SideOnly(Side.CLIENT)
+	public int getEnergyStoredScaled(int scale)
+	{
+		return (int)(scale * ((float)energy.getEnergyStored() / (float)energy.getMaxEnergyStored()));
+	}
+	
+	public void modifySettings(EnergyPortMode mode, EnergyPortAction action, int amount)
+	{
+		switch(mode)
+		{
+		case Input:
+			switch(action)
+			{
+			case Increase:
+				currentInput += amount;
+				
+				if(currentInput > maxInput)
+					currentInput = maxInput;
+				
+				break;
+			case Decrease:
+				currentInput -= amount;
+				
+				if(currentInput < 1)
+					currentInput = 1;
+				
+				break;
+			}
+			
+			break;
+		case Output:
+			switch(action)
+			{
+			case Increase:
+				currentOutput += amount;
+				
+				if(currentOutput > maxOutput)
+					currentOutput = maxOutput;
+				
+				break;
+			case Decrease:
+				currentOutput -= amount;
+				
+				if(currentOutput < 1)
+					currentOutput = 1;
+				
+				break;
+			}
+			
+			break;
+		}
+		
+		energy.setMaxReceive(currentInput);
+		energy.setMaxExtract(currentOutput);
+		Util.syncServerToClient(world, pos, this);
+	}
+	
+	public void setEnergyStored(int energy)
+	{
+		this.energy.setEnergyStored(energy);
 	}
 	
 	@Override
 	public int getEnergyStored(EnumFacing from)
 	{
 		return energy.getEnergyStored();
+	}
+	
+	public void setMaxEnergyStored(int capacity)
+	{
+		energy.setCapacity(capacity);
 	}
 
 	@Override
@@ -50,6 +132,12 @@ public class TileEntityReactorEnergyPort extends TileEntityReactorComponent impl
 	@Override
 	public void update()
 	{
+		if(world != null && !loaded)
+		{
+			Util.syncServerToClient(world, pos, this);
+			loaded = true;
+		}
+		
 		if(energy.getEnergyStored() <= 0)
 			return;
 		
@@ -71,7 +159,7 @@ public class TileEntityReactorEnergyPort extends TileEntityReactorComponent impl
 		
 		if(tile != null && tile instanceof IEnergyReceiver)
 		{
-			int extracted = extractEnergy(facing, 1024, true);
+			int extracted = extractEnergy(facing, currentOutput, true);
 			
 			if(extracted > 0)
 			{
@@ -86,7 +174,12 @@ public class TileEntityReactorEnergyPort extends TileEntityReactorComponent impl
 	{
 		super.writeToNBT(compound);
 		
-		compound.setInteger("yield", yield);
+		compound.setInteger("maxInput", maxInput);
+		compound.setInteger("maxOutput", maxOutput);
+		
+		compound.setInteger("currentInput", currentInput);
+		compound.setInteger("currentOutput", currentOutput);
+		
 		energy.writeToNBT(compound);
 		
 		return compound;
@@ -97,7 +190,13 @@ public class TileEntityReactorEnergyPort extends TileEntityReactorComponent impl
 	{
 		super.readFromNBT(compound);
 		
-		yield = compound.getInteger("yield");
+		maxInput = compound.getInteger("maxInput");
+		maxOutput = compound.getInteger("maxOutput");
+		
+		currentInput = compound.getInteger("currentInput");
+		currentOutput = compound.getInteger("currentOutput");
+		
+		energy = new EnergyStorageRF(1000000, currentInput, currentOutput);
 		energy.readFromNBT(compound);
 	}
 	
