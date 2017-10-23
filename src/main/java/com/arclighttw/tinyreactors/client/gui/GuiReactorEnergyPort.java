@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 import com.arclighttw.tinyreactors.container.ContainerReactorEnergyPort;
 import com.arclighttw.tinyreactors.main.Reference;
@@ -56,7 +57,7 @@ public class GuiReactorEnergyPort extends GuiContainer implements IGui
 	@Override
 	public void actionPerformed(GuiButton button) throws IOException
 	{
-		int amount = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT) ? 100 : Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL) ? 10 : 1;
+		int amount = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT) ? (Mouse.isButtonDown(0) ? 1000 : 100) : (Mouse.isButtonDown(0) ? 50 : 10);
 		
 		switch(button.id)
 		{
@@ -91,6 +92,9 @@ public class GuiReactorEnergyPort extends GuiContainer implements IGui
 		
 		Minecraft.getMinecraft().getTextureManager().bindTexture(TEXTURE);
 		drawTexturedModalRect(guiLeft, guiTop, 0, 0, xSize, ySize);
+		
+		int scale = energyPort.getEnergyStoredScaled(60);
+		drawTexturedModalRect(guiLeft + 84, guiTop + 68 - scale, 177, 0, 8, scale);
 	}
 	
 	@Override
@@ -107,25 +111,25 @@ public class GuiReactorEnergyPort extends GuiContainer implements IGui
 		
 		if(inputDecrease.isMouseOver())
 		{
-			String message = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT) ? "Reduce by 100" : Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL) ? "Reduce by 10" : "Reduce by 1";
+			String message = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT) ? "Decrease by 1000" /* (100) */ : "Decrease by 50" /* (10) */;
 			drawHoveringText(message, mouseX - guiLeft, mouseY - guiTop);
 		}
 		
 		if(inputIncrease.isMouseOver())
 		{
-			String message = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT) ? "Increase by 100" : Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL) ? "Increase by 10" : "Increase by 1";
+			String message = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT) ? "Increase by 1000" : "Increase by 50";
 			drawHoveringText(message, mouseX - guiLeft, mouseY - guiTop);
 		}
 		
 		if(outputDecrease.isMouseOver())
 		{
-			String message = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT) ? "Reduce by 100" : Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL) ? "Reduce by 10" : "Reduce by 1";
+			String message = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT) ? "Decrease by 1000" : "Decrease by 50";
 			drawHoveringText(message, mouseX - guiLeft, mouseY - guiTop);
 		}
 		
 		if(outputIncrease.isMouseOver())
 		{
-			String message = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT) ? "Increase by 100" : Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL) ? "Increase by 10" : "Increase by 1";
+			String message = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT) ? "Increase by 1000" : "Increase by 50";
 			drawHoveringText(message, mouseX - guiLeft, mouseY - guiTop);
 		}
 	}
