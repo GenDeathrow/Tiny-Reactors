@@ -10,7 +10,12 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.energy.CapabilityEnergy;
+import net.minecraftforge.fml.common.Optional;
 
+@Optional.InterfaceList({
+	@Optional.Interface(iface = "cofh.redstoneflux.api.IEnergyProvider", modid = "redstoneflux"),
+	@Optional.Interface(iface = "cofh.redstoneflux.api.IEnergyReceiver", modid = "redstoneflux")
+})
 public class TileEntityCapacitor extends TileEntity implements ITickable, IEnergyReceiver, IEnergyProvider
 {
 	EnergyStorageRF energy;
