@@ -13,7 +13,13 @@ Build a tiny reactor... Or a massive one!
 
 _Nothing here is a good sign ( it means there are no bug checks/fixes required at this time )._
 * Controller UI updates when block invalidates but not when validates.
+
 * Loadbalancing for Reactor Controller
+
+* Energy Port buttons should be up/down 1 or 10 (CTRL) or 100 (SHIFT).
+* _^ CTRL doesn't work on Mac - just have click/shift-click support?_
+* _^ Something is off with power gen. May need to be reimplemented._
+
 
 ## About
 
@@ -49,16 +55,25 @@ You can modify the rates of all the default ores or even remove them entirely, a
 * _^ Would need to implement Comparator methods so can be deactivated by redstone if nearing full._
 * _^ Click efficiency bar to increase/decrease power output._
 
-### Version 0.3.1 is set to make the following changes;
+### Version 0.3.1
 
-__Front-End:__
+__CHANGES__
+
+_Front-End:_
 * The Reactor Controller is now controlled from a UI.
 * The Reactor can be enabled and disabled after a valid structure built.
-* Reactor Energy Ports and Capacitors now produce RF correctly.
+* Reactor Energy Ports and Capacitors now produce compatible RF.
 * Config option for Reactor structures to go into meltdown if Reactor Controller energy buffer overfills.
+* Reimplemented Capacitors.
+* Energy Ports can modify the amount of power they can input/output at any time.
 
-__Back-End:__
+_Back-End:_
 * The Reactor Controller now has a _valid_ and _active_ flag to allow valid structures to be disabled.
+* The Reactor Controllor now handles power generation directly and not the Energy Ports.
+
+__BUG FIXES__
+
+* Fixed recipes for all Blocks.
 
 ### Version 0.3.0 changed a number of features with Tiny Reactors;
 
