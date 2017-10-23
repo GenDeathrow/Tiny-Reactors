@@ -5,17 +5,14 @@ import java.util.function.Consumer;
 
 import com.arclighttw.tinyreactors.config.TRConfig;
 import com.arclighttw.tinyreactors.init.TRBlocks;
-import com.arclighttw.tinyreactors.main.TinyReactors;
 import com.arclighttw.tinyreactors.managers.ReactorManager;
-import com.arclighttw.tinyreactors.network.MessageReactorStateClient;
 import com.arclighttw.tinyreactors.storage.EnergyStorageRF;
+import com.arclighttw.tinyreactors.util.Util;
 import com.google.common.collect.Lists;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
@@ -24,7 +21,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class TileEntityReactorController extends TileEntity implements ITickable
+public class TileEntityReactorController extends TileEntitySyncable implements ITickable
 {
 	boolean isValid, isActive;
 	boolean hasLoaded;
@@ -55,45 +52,27 @@ public class TileEntityReactorController extends TileEntity implements ITickable
 			return;
 		}
 		
-		if(isActive() && energyPorts.size() > 0)
+		if(energyPorts.size() == 1)
 		{
-			int maximumPerPort = availableYield / energyPorts.size();
-			int remaining = availableYield;
+			int buffer = isActive() ? availableYield : 0;
 			
 			for(TileEntityReactorEnergyPort energyPort : energyPorts)
 			{
-				int expended;
+				int expended = energyPort.receiveEnergy(Math.min(buffer, energyPort.maxInput), false);
+				buffer -= expended;
 				
-				if(maximumPerPort == 0)
-					expended = energyPort.receiveEnergy(remaining, false);
-				else	
-					expended = energyPort.receiveEnergy(Math.min(maximumPerPort, 1024), false);
-				
-				remaining -= expended;
+				if(expended < energyPort.currentInput)
+				{
+					int extraEnergy = energyPort.currentInput - expended;
+					int extracted = energy.extractEnergy(extraEnergy, true);
+
+					energyPort.receiveEnergy(extracted, false);
+					energy.extractEnergy(extracted, false);
+				}
 			}
 			
-			if(remaining > 0)
-				modifyEnergy(remaining);
+			modifyEnergy(buffer);
 		}
-	}
-	
-	@Override
-	public SPacketUpdateTileEntity getUpdatePacket()
-	{
-		return new SPacketUpdateTileEntity(getPos(), 3, getUpdateTag());
-	}
-	
-	@Override
-	public NBTTagCompound getUpdateTag()
-	{
-		return writeToNBT(new NBTTagCompound());
-	}
-	
-	@Override
-	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt)
-	{
-		super.onDataPacket(net, pkt);
-		handleUpdateTag(pkt.getNbtCompound());
 	}
 	
 	@Override
@@ -466,24 +445,13 @@ public class TileEntityReactorController extends TileEntity implements ITickable
 			return;
 		}
 		
-		syncServerToClient();
+		Util.syncServerToClient(world, pos, this);
 	}
 	
 	public void setActive(boolean active)
 	{
 		isActive = active;
-		syncServerToClient();
-	}
-	
-	void syncServerToClient()
-	{
-		world.markBlockRangeForRenderUpdate(pos, pos);
-		world.notifyBlockUpdate(pos, world.getBlockState(pos), world.getBlockState(pos), 3);
-		world.scheduleBlockUpdate(pos, getBlockType(), 0, 0);
-		markDirty();
-		
-		if(!world.isRemote)
-			TinyReactors.NETWORK.sendToAll(new MessageReactorStateClient());
+		Util.syncServerToClient(world, pos, this);
 	}
 	
 	void loopReactor(Consumer<BlockPos> action)

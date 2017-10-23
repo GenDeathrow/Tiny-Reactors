@@ -5,12 +5,12 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 
-public class TileEntityReactorComponent extends TileEntity implements IReactorComponent, ITickable
+public class TileEntityReactorComponent extends TileEntitySyncable implements IReactorComponent, ITickable
 {
 	TileEntityReactorController controller;
 	
-	boolean loaded;
-	int x, z, y = -1;
+	private boolean loaded;
+	private int x, z, y = -1;
 	
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound compound)
