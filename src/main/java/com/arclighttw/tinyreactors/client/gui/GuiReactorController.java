@@ -16,7 +16,7 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.util.ResourceLocation;
 
-public class GuiReactorController extends GuiContainer
+public class GuiReactorController extends GuiContainer implements IGui
 {
 	static final ResourceLocation TEXTURE = new ResourceLocation(Reference.ID, "textures/gui/reactor_controller.png");
 	
@@ -38,8 +38,8 @@ public class GuiReactorController extends GuiContainer
 	{
 		super.initGui();
 		
-		controlButton = new GuiButton(0, guiLeft + 82, guiTop + 52, 59, 16, "");
-		syncButton();
+		controlButton = new GuiButton(0, guiLeft + 10, guiTop + 52, 59, 16, "");
+		sync();
 		
 		addButton(controlButton);
 	}
@@ -59,7 +59,7 @@ public class GuiReactorController extends GuiContainer
 	public void updateScreen()
 	{
 		super.updateScreen();
-		syncButton();
+		sync();
 	}
 	
 	@Override
@@ -96,7 +96,8 @@ public class GuiReactorController extends GuiContainer
 			drawHoveringText(Arrays.asList(String.format("Energy: %,d RF", controller.getEnergyStored()), String.format("Filled: %d", controller.getEnergyStoredScaled(100)) + "%"), mouseX - guiLeft, mouseY - guiTop);
 	}
 	
-	public void syncButton()
+	@Override
+	public void sync()
 	{
 		if(controlButton == null)
 			return;
