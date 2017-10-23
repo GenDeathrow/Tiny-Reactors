@@ -26,6 +26,8 @@ public class TRRecipes
 	public static IRecipe REACTOR_CASING;
 	public static IRecipe REACTOR_GLASS;
 	
+	public static IRecipe CAPACITOR;
+	
 	static void onInitialize()
 	{
 		REACTOR_CONTROLLER = new ShapedRecipe(TRBlocks.REACTOR_CONTROLLER, new Object[] {
@@ -57,6 +59,15 @@ public class TRRecipes
 		
 		REACTOR_GLASS = new ShapelessRecipe(new ItemStack(TRBlocks.REACTOR_GLASS, 7), new Object[] {
 			Blocks.GLASS, Blocks.GLASS, Blocks.GLASS, Blocks.GLASS, Blocks.GLASS, Blocks.GLASS, Blocks.GLASS, Items.IRON_INGOT, Items.REDSTONE	
+		});
+		
+		CAPACITOR = new ShapedRecipe(TRBlocks.CAPACITOR, new Object[] {
+			"IRI",
+			"IrI",
+			"IRI",
+				Character.valueOf('I'), Items.IRON_INGOT,
+				Character.valueOf('R'), Items.REDSTONE,
+				Character.valueOf('r'), Blocks.REDSTONE_BLOCK
 		});
 	}
 	
