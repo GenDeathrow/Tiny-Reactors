@@ -14,12 +14,12 @@ import javax.imageio.ImageIO;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.IResourceManager;
-import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.util.ChatAllowedCharacters;
 import net.minecraft.util.ResourceLocation;
@@ -27,7 +27,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
-public class SmallFontRenderer implements IResourceManagerReloadListener
+public class SmallFontRenderer extends FontRenderer
 {
     private static final ResourceLocation[] unicodePageLocations = new ResourceLocation[256];
 
@@ -106,6 +106,8 @@ public class SmallFontRenderer implements IResourceManagerReloadListener
 
     public SmallFontRenderer(GameSettings par1GameSettings, ResourceLocation par2ResourceLocation, TextureManager par3TextureManager, boolean par4)
     {
+    		super(par1GameSettings, par2ResourceLocation, par3TextureManager, par4);
+    	
         this.locationFontTexture = par2ResourceLocation;
         //logger.error(this.locationFontTexture.toString() + "    " + this.locationFontTexture.getResourcePath());
         this.renderEngine = par3TextureManager;
@@ -246,7 +248,8 @@ public class SmallFontRenderer implements IResourceManagerReloadListener
     /**
      * Render a single character with the default.png font at current (posX,posY) location...
      */
-    private float renderDefaultChar (int par1, boolean par2)
+    @Override
+    public float renderDefaultChar (int par1, boolean par2)
     {
         float f = (float) (par1 % 16 * 8);
         float f1 = (float) (par1 / 16 * 8);
@@ -286,7 +289,8 @@ public class SmallFontRenderer implements IResourceManagerReloadListener
     /**
      * Render a single Unicode character at current (posX,posY) location using one of the /font/glyph_XX.png files...
      */
-    private float renderUnicodeChar (char par1, boolean par2)
+    @Override
+    public float renderUnicodeChar (char par1, boolean par2)
     {
         if (this.glyphWidth[par1] == 0)
         {
@@ -930,7 +934,7 @@ public class SmallFontRenderer implements IResourceManagerReloadListener
     /**
      * Inserts newline and formatting into a string to wrap it within the specified width.
      */
-    String wrapFormattedStringToWidth (String par1Str, int par2)
+    private String wrapFormattedStringToWidth (String par1Str, int par2)
     {
         int j = this.sizeStringToWidth(par1Str, par2);
 
@@ -1033,7 +1037,7 @@ public class SmallFontRenderer implements IResourceManagerReloadListener
     /**
      * Digests a string for nonprinting formatting characters then returns a string containing only that formatting.
      */
-    private static String getFormatFromString (String par0Str)
+    public static String getFormatFromString (String par0Str)
     {
         String s1 = "";
         int i = -1;
