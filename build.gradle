@@ -20,6 +20,17 @@ compileJava {
     sourceCompatibility = targetCompatibility = '1.8'
 }
 
+repositories {
+	maven {
+		name = "Covers Maven"
+		url = "http://maven.covers1624.net"
+	}
+}
+
+dependencies {
+	compile "cofh:RedstoneFlux:1.12-2.0.0.1:deobf"
+}
+
 minecraft {
     runDir = "run"
 	mappings = "${mappings_version}"
