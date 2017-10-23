@@ -4,7 +4,8 @@ import java.io.File;
 
 import com.arclighttw.tinyreactors.config.ModConfig;
 import com.arclighttw.tinyreactors.managers.GuiManager;
-import com.arclighttw.tinyreactors.network.MessageReactorStateClient;
+import com.arclighttw.tinyreactors.network.MessageEnergyPortServer;
+import com.arclighttw.tinyreactors.network.MessageIGuiSync;
 import com.arclighttw.tinyreactors.network.MessageReactorStateServer;
 import com.arclighttw.tinyreactors.proxy.CommonProxy;
 
@@ -44,8 +45,9 @@ public class TinyReactors
 		NetworkRegistry.INSTANCE.registerGuiHandler(instance, new GuiManager());
 		
 		NETWORK = NetworkRegistry.INSTANCE.newSimpleChannel(Reference.ID);
-		NETWORK.registerMessage(MessageReactorStateClient.Handler.class, MessageReactorStateClient.class, 0, Side.CLIENT);
+		NETWORK.registerMessage(MessageIGuiSync.Handler.class, MessageIGuiSync.class, 0, Side.CLIENT);
 		NETWORK.registerMessage(MessageReactorStateServer.Handler.class, MessageReactorStateServer.class, 1, Side.SERVER);
+		NETWORK.registerMessage(MessageEnergyPortServer.Handler.class, MessageEnergyPortServer.class, 2, Side.SERVER);
 	}
 	
 	@Mod.EventHandler
