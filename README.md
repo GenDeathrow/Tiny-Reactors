@@ -11,14 +11,11 @@ Build a tiny reactor... Or a massive one!
 
 ## Tracker
 
-_Nothing here is a good sign ( it means there are no bug checks/fixes required at this time )._
+_This space being empty is a good sign ( it means there are no bug checks/fixes required at this time )._
+
 * Controller UI updates when block invalidates but not when validates.
 
 * Loadbalancing for Reactor Controller
-
-* Energy Port buttons should be up/down 1 or 10 (CTRL) or 100 (SHIFT).
-* _^ CTRL doesn't work on Mac - just have click/shift-click support?_
-* _^ Something is off with power gen. May need to be reimplemented._
 
 
 ## About
@@ -58,6 +55,9 @@ You can modify the rates of all the default ores or even remove them entirely, a
 ### Version 0.3.1
 
 __CHANGES__
+
+_Dependencies:_
+* Tiny Reactors now requires RedstoneFlux as a dependency (this is - hopefully - temporary).
 
 _Front-End:_
 * The Reactor Controller is now controlled from a UI.
